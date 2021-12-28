@@ -66,3 +66,6 @@ __You can change it to any pin using menuconfig.__
 
 # Screen Shot   
 ![mpr121-2](https://user-images.githubusercontent.com/6020549/147515969-54901561-66f5-4077-b6f8-7dbd7fe49f2c.jpg)
+
+# Reference   
+https://github.com/nopnop2002/esp-idf-ttp229
