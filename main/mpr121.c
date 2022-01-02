@@ -63,7 +63,8 @@
 static const char *TAG = "MPR121";
 
 void MPR121_type(MPR121_t * dev){
-	dev->address = 0x5C;		// default address is 0x5C, for use with Bare Conductive Touch Board
+	//dev->address = 0x5C;		// default address is 0x5C, for use with Bare Conductive Touch Board
+	dev->address = 0x5A;		// default address is 0x5A, for use with Bare Conductive Touch Board
 	dev->ECR_backup = 0x00;
 	dev->running = false;
 	dev->error = 1<<NOT_INITED_BIT; // initially, we're not initialised
