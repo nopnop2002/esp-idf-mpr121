@@ -1,5 +1,11 @@
 menu "MPR121 Configuration"
 
+	config I2C_ADDRESS
+		hex "I2C address"
+		default 0x5A
+		help
+			I2C address.
+
 	config SCL_GPIO
 		int "SCL GPIO number"
 		range 0 48

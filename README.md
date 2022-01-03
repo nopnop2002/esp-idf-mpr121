@@ -48,7 +48,7 @@ idf.py flash
 
 ![config-top](https://user-images.githubusercontent.com/6020549/147515950-b6e2cf2f-5a82-4114-a565-df7a78085c8d.jpg)
 
-![config-mpr121](https://user-images.githubusercontent.com/6020549/147515956-ef978fca-07ae-4dc6-b8c1-121fe17e23ef.jpg)
+![config-mpr121](https://user-images.githubusercontent.com/6020549/147892705-4672b941-3939-42c2-aad9-8a12f49d2451.jpg)
 
 
 # Wirering

@@ -15,12 +15,11 @@
 
 #include "mpr121.h"
 
-#define MPR121_ADDR 0x5A
-
 static const char *TAG = "MAIN";
 
 void app_main(void)
 {
+	ESP_LOGI(TAG, "CONFIG_I2C_ADDRESS=0x%X", CONFIG_I2C_ADDRESS);
 	ESP_LOGI(TAG, "CONFIG_SCL_GPIO=%d", CONFIG_SCL_GPIO);
 	ESP_LOGI(TAG, "CONFIG_SDA_GPIO=%d", CONFIG_SDA_GPIO);
 	ESP_LOGI(TAG, "CONFIG_IRQ_GPIO=%d", CONFIG_IRQ_GPIO);
@@ -30,7 +29,7 @@ void app_main(void)
 	uint16_t releaseThreshold = 20;
 	//uint16_t interruptPin = 4;
 
-	bool ret = MPR121_begin(&dev, MPR121_ADDR, touchThreshold, releaseThreshold, CONFIG_IRQ_GPIO, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO);
+	bool ret = MPR121_begin(&dev, CONFIG_I2C_ADDRESS, touchThreshold, releaseThreshold, CONFIG_IRQ_GPIO, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO);
 	ESP_LOGI(TAG, "MPR121_begin=%d", ret);
 	if (ret == false) {
 		switch (MPR121_getError(&dev)) {
@@ -63,8 +62,8 @@ void app_main(void)
 
 
 #if 0
-  MPR121_setTouchThresholdAll(&dev, 40);  // this is the touch threshold - setting it low makes it more like a proximity trigger, default value is 40 for touch
-  MPR121_setReleaseThresholdAll(&dev, 20);  // this is the release threshold - must ALWAYS be smaller than the touch threshold, default value is 20 for touch
+	MPR121_setTouchThresholdAll(&dev, 40);	// this is the touch threshold - setting it low makes it more like a proximity trigger, default value is 40 for touch
+	MPR121_setReleaseThresholdAll(&dev, 20);	// this is the release threshold - must ALWAYS be smaller than the touch threshold, default value is 20 for touch
 #endif
 
 
