@@ -1,5 +1,12 @@
 menu "MPR121 Configuration"
 
+	config GPIO_RANGE_MAX
+		int
+		default 33 if IDF_TARGET_ESP32
+		default 46 if IDF_TARGET_ESP32S2
+		default 19 if IDF_TARGET_ESP32C3
+		default 48 if IDF_TARGET_ESP32S3
+
 	config I2C_ADDRESS
 		hex "I2C address"
 		default 0x5A
@@ -8,10 +15,9 @@ menu "MPR121 Configuration"
 
 	config SCL_GPIO
 		int "SCL GPIO number"
-		range 0 48
+		range 0 GPIO_RANGE_MAX
 		default 6 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32H2
-		default 16 if IDF_TARGET_ESP32S2
-		default 46 if IDF_TARGET_ESP32S3
+		default 16 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
 		default 4
 		help
 			GPIO number (IOxx) to SCL.
@@ -19,10 +25,9 @@ menu "MPR121 Configuration"
 
 	config SDA_GPIO
 		int "SDA GPIO number"
-		range 0 48
+		range 0 GPIO_RANGE_MAX
 		default 7 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32H2
-		default 17 if IDF_TARGET_ESP32S2
-		default 47 if IDF_TARGET_ESP32S3
+		default 17 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
 		default 5
 		help
 			GPIO number (IOxx) to SDA.
@@ -30,10 +35,9 @@ menu "MPR121 Configuration"
 
 	config IRQ_GPIO
 		int "IRQ GPIO number"
-		range 0 48
+		range 0 GPIO_RANGE_MAX
 		default 8 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32H2
-		default 18 if IDF_TARGET_ESP32S2
-		default 48 if IDF_TARGET_ESP32S3
+		default 18 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
 		default 15
 		help
 			GPIO number (IOxx) to IRQ.

@@ -32,7 +32,7 @@ idf.py flash
 
 # Wirering
 
-|MPR121||ESP32|ESP32-S2|ESP32-C3|
+|MPR121||ESP32|ESP32-S2/S3|ESP32-C3|
 |:-:|:-:|:-:|:-:|:-:|
 |SCL|--|GPIO4|GPIO16|GPIO6|
 |SDA|--|GPIO5|GPIO17|GPIO7|
