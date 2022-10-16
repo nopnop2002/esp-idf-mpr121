@@ -13,36 +13,15 @@ MPR121 Capacitive Touch switch.
 esp-idf v4.4 or later.   
 This is because this version supports ESP32-C3.   
 
-# Installation for ESP32
+# Installation
 
 ```Shell
 git clone https://github.com/nopnop2002/esp-idf-mpr121
 cd esp-idf-mpr121
-idf.py set-target esp32
+idf.py set-target {esp32/esp32s2/esp32s3/esp32c3}
 idf.py menuconfig
 idf.py flash
 ```
-
-# Installation for ESP32-S2
-
-```Shell
-git clone https://github.com/nopnop2002/esp-idf-mpr121
-cd esp-idf-mpr121
-idf.py set-target esp32s2
-idf.py menuconfig
-idf.py flash
-```
-
-# Installation for ESP32-C3
-
-```Shell
-git clone https://github.com/nopnop2002/esp-idf-mpr121
-cd esp-idf-mpr121
-idf.py set-target esp32c3
-idf.py menuconfig
-idf.py flash
-```
-
 
 # Configuration   
 
