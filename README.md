@@ -3,22 +3,22 @@ MPR121 Capacitive Touch Driver for esp-idf.
 
 I ported from [here](https://github.com/BareConductive/mpr121).   
 
+# Software requirements
+ESP-IDF V4.4/V5.0.   
+ESP-IDF V5 is required when using ESP32-C2.   
+
 # Hardware requirements   
 MPR121 Capacitive Touch switch.
 
 ![mpr121-1](https://user-images.githubusercontent.com/6020549/147515909-cd50a16a-5c60-4bd0-bc32-c288f5d8ee88.JPG)
 
 
-# Software requirements
-esp-idf v4.4 or later.   
-This is because this version supports ESP32-C3.   
-
 # Installation
 
 ```Shell
 git clone https://github.com/nopnop2002/esp-idf-mpr121
 cd esp-idf-mpr121
-idf.py set-target {esp32/esp32s2/esp32s3/esp32c3}
+idf.py set-target {esp32/esp32s2/esp32s3/esp32c2/esp32c3}
 idf.py menuconfig
 idf.py flash
 ```
@@ -32,7 +32,7 @@ idf.py flash
 
 # Wirering
 
-|MPR121||ESP32|ESP32-S2/S3|ESP32-C3|
+|MPR121||ESP32|ESP32-S2/S3|ESP32-C2/C3|
 |:-:|:-:|:-:|:-:|:-:|
 |SCL|--|GPIO4|GPIO16|GPIO6|
 |SDA|--|GPIO5|GPIO17|GPIO7|
