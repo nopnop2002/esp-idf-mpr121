@@ -5,7 +5,7 @@ I ported from [here](https://github.com/BareConductive/mpr121).
 
 # Software requirements
 ESP-IDF V4.4/V5.0.   
-ESP-IDF V5 is required when using ESP32-C2.   
+ESP-IDF V5.0 is required when using ESP32-C2.   
 
 # Hardware requirements   
 MPR121 Capacitive Touch switch.
