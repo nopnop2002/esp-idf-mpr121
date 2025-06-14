@@ -43,7 +43,7 @@ If you use this module at the same time as another I2C device using I2C port 0, 
 |GND|--|GND|GND|GND|
 |VCC|--|3.3V|3.3V|3.3V|
 
-__Note:__It is recommended to add external pull-up resistors for SDA/SCL pins to make the communication more stable, though the driver will enable internal pull-up resistors.   
+__Note:__ It is recommended to add external pull-up resistors for SDA/SCL pins to make the communication more stable, though the driver will enable internal pull-up resistors.   
 
 __You can change it to any pin using menuconfig.__   
 
