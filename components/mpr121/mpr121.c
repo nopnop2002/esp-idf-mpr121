@@ -48,23 +48,25 @@
 
 #include "mpr121.h"
 
-
 #define NOT_INITED_BIT 0
 #define ADDRESS_UNKNOWN_BIT 1
 #define READBACK_FAIL_BIT 2
 #define OVERCURRENT_FLAG_BIT 3
 #define OUT_OF_RANGE_BIT 4
 
+#if CONFIG_I2C_PORT_0
 #define I2C_NUM I2C_NUM_0
-//#define I2C_NUM I2C_NUM_1
+#else
+#define I2C_NUM I2C_NUM_1
+#endif
 
 #define I2C_MASTER_FREQ_HZ 400000 /*!< I2C master clock frequency. no higher than 1MHz for now */
 
 static const char *TAG = "MPR121";
 
 void MPR121_type(MPR121_t * dev){
-	//dev->address = 0x5C;		// default address is 0x5C, for use with Bare Conductive Touch Board
-	dev->address = 0x5A;		// default address is 0x5A, for use with Bare Conductive Touch Board
+	//dev->address = 0x5C;	// default address is 0x5C, for use with Bare Conductive Touch Board
+	dev->address = 0x5A;	// default address is 0x5A, for use with Bare Conductive Touch Board
 	dev->ECR_backup = 0x00;
 	dev->running = false;
 	dev->error = 1<<NOT_INITED_BIT; // initially, we're not initialised
@@ -78,7 +80,7 @@ void MPR121_setRegister(MPR121_t * dev, uint8_t reg, uint8_t value){
 	ESP_LOGD(TAG, "setRegister reg=0x%02x value=0x%02x", reg, value);
 	bool wasRunning = false;;
 
-	if(reg==MPR121_ECR){	// if we are modding MPR121_ECR, update our internal running status
+	if(reg==MPR121_ECR){ // if we are modding MPR121_ECR, update our internal running status
 		if(value&0x3F){
 			dev->running = true;
 		} else {
@@ -86,20 +88,10 @@ void MPR121_setRegister(MPR121_t * dev, uint8_t reg, uint8_t value){
 		}
 	} else if(reg<MPR121_CTL0){
 		wasRunning = dev->running;
-		if(wasRunning) MPR121_stop(dev);	// we should ALWAYS be in stop mode for this
-								// unless modding MPR121_ECR or GPIO / LED register
+		if(wasRunning) MPR121_stop(dev);
+		// we should ALWAYS be in stop mode for this
+		// unless modding MPR121_ECR or GPIO / LED register
 	}
-
-#if 0
-		Wire.beginTransmission(address);
-		Wire.write(reg);
-		Wire.write(value);
-		if(Wire.endTransmission()!=0){
-			dev->error |= 1<<ADDRESS_UNKNOWN_BIT; // set address unknown bit
-		} else {
-			dev->error &= ~(1<<ADDRESS_UNKNOWN_BIT);
-		}
-#endif
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
@@ -117,26 +109,12 @@ void MPR121_setRegister(MPR121_t * dev, uint8_t reg, uint8_t value){
 	}
 	i2c_cmd_link_delete(cmd);
 
-	if(wasRunning) MPR121_run(dev);		// restore run mode if necessary
+	if(wasRunning) MPR121_run(dev); // restore run mode if necessary
 }
 
 uint8_t MPR121_getRegister(MPR121_t * dev, uint8_t reg){
 	ESP_LOGD(TAG, "getRegister reg=0x%02x", reg);
 	uint8_t scratch = 0;
-
-
-#if 0
-		Wire.beginTransmission(address);
-		Wire.write(reg); // set address to read from our requested register
-		Wire.endTransmission(false); // repeated start
-
-		if(Wire.requestFrom(address,(uint8_t)1) == 1){	// just a single byte
-			dev->error &= ~(1<<ADDRESS_UNKNOWN_BIT); // all good, clear the bit
-			scratch = Wire.read();
-		} else {
-			dev->error |= 1<<ADDRESS_UNKNOWN_BIT; //set the bit - something went wrong
-		}
-#endif
 
 	uint8_t buf[2];
 	memset (buf, 0, 2);
@@ -177,48 +155,10 @@ uint8_t MPR121_getRegister(MPR121_t * dev, uint8_t reg){
 	return scratch;
 }
 
-
-
 bool MPR121_begin(MPR121_t * dev, int16_t address, int16_t touchThreshold, int16_t releaseThreshold, int16_t interruptPin, int16_t sda, int16_t scl){
 
 	// SDA and SCL should idle high, but MPR121 can get stuck waiting to complete a transaction
 	// this code detects this state and releases us from it
-
-#if 0
-	//boolean stuck_transaction = false;
-	bool stuck_transaction = false;
-	uint8_t stuck_transaction_retry_count = 0;
-	const uint8_t stuck_transaction_retry_MAX = 10;
-
-	::pinMode( PIN_WIRE_SDA, INPUT_PULLUP );
-	::pinMode( PIN_WIRE_SCL, INPUT_PULLUP );
-
-	do{
-		if(( ::digitalRead( PIN_WIRE_SDA ) == LOW ) && ( ::digitalRead( PIN_WIRE_SCL ) == HIGH )){
-			Serial.println("MPR121_begin stuck_transaction = true");
-			stuck_transaction = true;
-			::pinMode( PIN_WIRE_SCL, OUTPUT );
-			::digitalWrite( PIN_WIRE_SCL, LOW );
-			delay( 1 ); // this is way longer than required (would be 1.25us at 400kHz) but err on side of caution
-			::pinMode( PIN_WIRE_SCL, INPUT_PULLUP );
-			stuck_transaction_retry_count++;
-		} else {
-			Serial.println("MPR121_begin stuck_transaction = false");
-			stuck_transaction = false;
-		}
-	} while ( stuck_transaction && ( stuck_transaction_retry_count < stuck_transaction_retry_MAX ));
-
-	// TODO: add new error code that can be handled externally
-	if( stuck_transaction_retry_count > 0){
-		if( stuck_transaction ){
-		} else {
-		}
-	}
-
-	// now we've released (if necessary) we can get on with things
-	Wire.begin();
-#endif
-
 	i2c_config_t i2c_config = {
 		.mode = I2C_MODE_MASTER,
 		.sda_io_num = sda,
@@ -361,8 +301,8 @@ bool MPR121_reset(MPR121_t * dev){
 void MPR121_settingsType(MPR121_settings_type *defaultSettings){
 	defaultSettings->_TTHRESH=40;
 	defaultSettings->_RTHRESH=20;
-	defaultSettings->_INTERRUPT=0;		// note that this is not a hardware interrupt, just the digital
-										// pin that the MPR121 ~INT pin is connected to
+	defaultSettings->_INTERRUPT=0;	// note that this is not a hardware interrupt, just the digital
+									// pin that the MPR121 ~INT pin is connected to
 	defaultSettings->_MHDR=0x01;
 	defaultSettings->_NHDR=0x01;
 	defaultSettings->_NCLR=0x10;
@@ -400,8 +340,9 @@ void MPR121_settingsType(MPR121_settings_type *defaultSettings){
 //void MPR121_applySettings(MPR121_t * dev, MPR121_settings_type *settings){
 void MPR121_applySettings(MPR121_t * dev){
 	bool wasRunning = dev->running;
-	if(wasRunning) MPR121_stop(dev);	// can't change most regs when running - checking
-							// here avoids multiple stop() / run() calls
+	if(wasRunning) MPR121_stop(dev);
+	// can't change most regs when running - checking
+	// here avoids multiple stop() / run() calls
 
 	MPR121_setRegister(dev, MPR121_MHDR, dev->defaultSettings._MHDR);
 	MPR121_setRegister(dev, MPR121_NHDR, dev->defaultSettings._NHDR);
@@ -522,9 +463,10 @@ bool MPR121_updateFilteredData(MPR121_t * dev){
 		dev->autoTouchStatusFlag = true;
 	}
 
-  for(int i=0; i<26; i++){ // 13 filtered values
-    buf[i] = MPR121_getRegister(dev, MPR121_E0FDL+i);
-  }
+	for(int i=0; i<26; i++){ // 13 filtered values
+		buf[i] = MPR121_getRegister(dev, MPR121_E0FDL+i);
+		if (( i % 2) == 0) vTaskDelay(1);
+	}
 
 	for(int i=0; i<13; i++){ // 13 filtered values
 		if(MPR121_touchStatusChanged(dev)) {
@@ -539,38 +481,6 @@ bool MPR121_updateFilteredData(MPR121_t * dev){
 	}
 
 	return true;
-
-#if 0
-	uint8_t LSB, MSB;
-
-	Wire.beginTransmission(address);
-	Wire.write(MPR121_E0FDL); // set address register to read from the start of the
-								//filtered data
-	Wire.endTransmission(false); // repeated start
-
-	if(MPR121_touchStatusChanged(dev)) {
-		dev->autoTouchStatusFlag = true;
-	}
-
-	if(Wire.requestFrom(address,(uint8_t)26)==26){
-		for(int i=0; i<13; i++){ // 13 filtered values
-			if(MPR121_touchStatusChanged(dev)) {
-				dev->autoTouchStatusFlag = true;
-			}
-			LSB = Wire.read();
-			if(MPR121_touchStatusChanged(dev)) {
-				dev->autoTouchStatusFlag = true;
-			}
-			MSB = Wire.read();
-			dev->filteredData[i] = ((MSB << 8) | LSB);
-		}
-		return(true);
-	} else {
-		// if we don't get back all 26 values we requested, don't update the FDAT values
-		// and return false
-		return(false);
-	}
-#endif
 }
 
 int MPR121_getFilteredData(MPR121_t * dev, uint8_t electrode){
@@ -598,31 +508,6 @@ bool MPR121_updateBaselineData(MPR121_t * dev){
 	}
 
 	return true;
-
-#if 0
-	Wire.beginTransmission(address);
-	Wire.write(MPR121_E0BV);	// set address register to read from the start of the
-								// baseline data
-	Wire.endTransmission(false); // repeated start
-
-	if(MPR121_touchStatusChanged(dev)) {
-		dev->autoTouchStatusFlag = true;
-	}
-
-	if(Wire.requestFrom(address,(uint8_t)13)==13){
-		for(int i=0; i<13; i++){ // 13 filtered values
-			if(MPR121_touchStatusChanged(dev)) {
-				dev->autoTouchStatusFlag = true;
-			}
-			dev->baselineData[i] = Wire.read()<<2;
-		}
-		return(true);
-		} else {
-			// if we don't get back all 26 values we requested, don't update the BVAL values
-			// and return false
-		return(false);
-	}
-#endif
 }
 
 int MPR121_getBaselineData(MPR121_t * dev, uint8_t electrode){
@@ -651,9 +536,10 @@ void MPR121_setTouchThresholdAll(MPR121_t * dev, uint8_t val){
 	if(!MPR121_isInited(dev)) return;
 	bool wasRunning = dev->running;
 
-	if(wasRunning) MPR121_stop(dev);	// can only change thresholds when not running
-							// checking here avoids multiple stop() / run()
-							// calls
+	if(wasRunning) MPR121_stop(dev);
+	// can only change thresholds when not running
+	// checking here avoids multiple stop() / run()
+	// calls
 
 	for(uint8_t i=0; i<13; i++){
 		MPR121_setTouchThreshold(dev, i, val);
@@ -689,8 +575,9 @@ void MPR121_setReleaseThresholdAll(MPR121_t * dev, uint8_t val){
 	if(!MPR121_isInited(dev)) return;
 	bool wasRunning = dev->running;
 
-	if(wasRunning) MPR121_stop(dev);	// can only change thresholds when not running
-							// checking here avoids multiple stop / starts
+	if(wasRunning) MPR121_stop(dev);
+	// can only change thresholds when not running
+	// checking here avoids multiple stop / starts
 
 	for(uint8_t i=0; i<13; i++){
 		MPR121_setReleaseThreshold(dev, i, val);
@@ -760,18 +647,18 @@ void MPR121_setProxMode(MPR121_t * dev, uint8_t mode){
 
 	switch(mode){
 		case PROX_DISABLED:
-			dev->ECR_backup &= ~(3<<4);  // ELEPROX_EN[1:0] = 00
+			dev->ECR_backup &= ~(3<<4); // ELEPROX_EN[1:0] = 00
 			break;
 		case PROX_0_1:
-			dev->ECR_backup |=	(1<<4);  // ELEPROX_EN[1:0] = 01
+			dev->ECR_backup |=	(1<<4); // ELEPROX_EN[1:0] = 01
 			dev->ECR_backup &= ~(1<<5);
 			break;
 		case PROX_0_3:
-			dev->ECR_backup &= ~(1<<4);  // ELEPROX_EN[1:0] = 10
+			dev->ECR_backup &= ~(1<<4); // ELEPROX_EN[1:0] = 10
 			dev->ECR_backup |=	(1<<5);
 			break;
 		case PROX_0_11:
-			dev->ECR_backup |=	(3<<4);  // ELEPROX_EN[1:0] = 11
+			dev->ECR_backup |=	(3<<4); // ELEPROX_EN[1:0] = 11
 			break;
 	}
 
@@ -789,18 +676,18 @@ void MPR121_setCalibrationLock(MPR121_t * dev, uint8_t lock){
 
 	switch(lock){
 		case CAL_LOCK_ENABLED:
-			dev->ECR_backup &= ~(3<<6);  // CL[1:0] = 00
+			dev->ECR_backup &= ~(3<<6); // CL[1:0] = 00
 			break;
 		case CAL_LOCK_DISABLED:
-			dev->ECR_backup |=	(1<<6);  // CL[1:0] = 01
+			dev->ECR_backup |=	(1<<6); // CL[1:0] = 01
 			dev->ECR_backup &= ~(1<<7);
 			break;
 		case CAL_LOCK_ENABLED_5_BIT_COPY:
-			dev->ECR_backup &= ~(1<<6);  // CL[1:0] = 10
+			dev->ECR_backup &= ~(1<<6); // CL[1:0] = 10
 			dev->ECR_backup |=	(1<<7);
 			break;
 		case CAL_LOCK_ENABLED_10_BIT_COPY:
-			dev->ECR_backup |=	(3<<4);  // CL[1:0] = 11
+			dev->ECR_backup |=	(3<<4); // CL[1:0] = 11
 			break;
 	}
 

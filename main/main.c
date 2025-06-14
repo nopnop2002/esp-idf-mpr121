@@ -62,16 +62,17 @@ void app_main(void)
 
 
 #if 0
-	MPR121_setTouchThresholdAll(&dev, 40);	// this is the touch threshold - setting it low makes it more like a proximity trigger, default value is 40 for touch
-	MPR121_setReleaseThresholdAll(&dev, 20);	// this is the release threshold - must ALWAYS be smaller than the touch threshold, default value is 20 for touch
+	// this is the touch threshold - setting it low makes it more like a proximity trigger, default value is 40 for touch
+	MPR121_setTouchThresholdAll(&dev, 40);
+	// this is the release threshold - must ALWAYS be smaller than the touch threshold, default value is 20 for touch
+	MPR121_setReleaseThresholdAll(&dev, 20);
 #endif
-
 
 	MPR121_setFFI(&dev, FFI_10); // AFE Configuration 1
 	MPR121_setSFI(&dev, SFI_10); // AFE Configuration 2
-	MPR121_setGlobalCDT(&dev, CDT_4US);  // reasonable for larger capacitances
-	MPR121_autoSetElectrodesDefault(&dev, true);	// autoset all electrode settings
-
+	MPR121_setGlobalCDT(&dev, CDT_4US); // reasonable for larger capacitances
+	MPR121_autoSetElectrodesDefault(&dev, true); // autoset all electrode settings
+	MPR121_updateTouchData(&dev); // Clear touch status register
 
 	while(1) {
 		MPR121_updateAll(&dev);
@@ -82,6 +83,6 @@ void app_main(void)
 				ESP_LOGI(TAG, "electrode %d was just released", i);
 			}
 		}
-		vTaskDelay(10);
+		vTaskDelay(1);
 	}
 }

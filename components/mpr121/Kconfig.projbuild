@@ -9,6 +9,22 @@ menu "MPR121 Configuration"
 		default 19 if IDF_TARGET_ESP32C3
 		default 30 if IDF_TARGET_ESP32C6
 
+	choice I2C_PORT
+		prompt "I2C port that controls this bus"
+		default I2C_PORT_0
+		help
+			Select I2C port that controls this bus.
+		config I2C_PORT_0
+			bool "I2C_PORT_0"
+			help
+				Use I2C_PORT_0.
+		config I2C_PORT_1
+			depends on IDF_TARGET_ARCH_XTENSA
+			bool "I2C_PORT_1"
+			help
+				Use I2C_PORT_1.
+	endchoice
+
 	config I2C_ADDRESS
 		hex "I2C address"
 		default 0x5A
@@ -18,7 +34,7 @@ menu "MPR121 Configuration"
 	config SCL_GPIO
 		int "SCL GPIO number"
 		range 0 GPIO_RANGE_MAX
-		default 22 if IDF_TARGET_ESP32
+		default 19 if IDF_TARGET_ESP32
 		default 12 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
 		default  6 # C3 and others
 		help
@@ -28,7 +44,7 @@ menu "MPR121 Configuration"
 	config SDA_GPIO
 		int "SDA GPIO number"
 		range 0 GPIO_RANGE_MAX
-		default 21 if IDF_TARGET_ESP32
+		default 18 if IDF_TARGET_ESP32
 		default 11 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
 		default  5 # C3 and others
 		help
