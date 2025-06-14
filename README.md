@@ -28,6 +28,11 @@ idf.py flash
 ![Image](https://github.com/user-attachments/assets/66e7e417-3a55-49aa-ab57-8e9ff0f848a3)
 ![Image](https://github.com/user-attachments/assets/40d3a5ac-43cd-4fc7-a80d-4f330d677d94)
 
+## I2C Port selection   
+XTENSA's ESP32 has two i2c port: I2C_NUM_0/1.   
+You can use these two ports freely.   
+If you use this module at the same time as another I2C device using I2C port 0, you must change it to I2C port 1.   
+
 # Wirering
 
 |MPR121||ESP32|ESP32-S2/S3|ESP32-C2/C3/C6|
