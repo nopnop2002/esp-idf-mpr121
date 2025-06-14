@@ -28,6 +28,10 @@ void app_main(void)
 	uint16_t touchThreshold = 40;
 	uint16_t releaseThreshold = 20;
 
+	// Set default value
+	MPR121_type(&dev);
+
+	// Initialize device
 	bool ret = MPR121_begin(&dev, CONFIG_I2C_ADDRESS, touchThreshold, releaseThreshold, CONFIG_IRQ_GPIO, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO);
 	ESP_LOGI(TAG, "MPR121_begin=%d", ret);
 	if (ret == false) {
