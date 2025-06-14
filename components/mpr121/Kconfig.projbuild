@@ -25,6 +25,12 @@ menu "MPR121 Configuration"
 				Use I2C_PORT_1.
 	endchoice
 
+	config LEGACY_DRIVER
+		bool "Force legacy i2c driver"
+		default false
+		help
+			Force legacy i2c driver.
+
 	config I2C_ADDRESS
 		hex "I2C address"
 		default 0x5A

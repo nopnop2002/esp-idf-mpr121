@@ -40,6 +40,26 @@
 
 #include "mpr121_defs.h"
 
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0))
+#include "driver/i2c_master.h"
+#else
+#include "driver/i2c.h"
+#endif
+
+#define I2C_MASTER_FREQ_HZ 400000 /*!< I2C master clock frequency. no higher than 1MHz for now */
+#define I2C_TICKS_TO_WAIT 100	  // Maximum ticks to wait before issuing a timeout.
+
+#define NOT_INITED_BIT 0
+#define ADDRESS_UNKNOWN_BIT 1
+#define READBACK_FAIL_BIT 2
+#define OVERCURRENT_FLAG_BIT 3
+#define OUT_OF_RANGE_BIT 4
+
+#if CONFIG_I2C_PORT_0
+#define I2C_NUM I2C_NUM_0
+#else
+#define I2C_NUM I2C_NUM_1
+#endif
 
 // idea behind this is to create a settings structure that we can use to store
 // all the setup variables for a particular setup - comes pre-instantiated with
@@ -107,10 +127,14 @@ typedef struct
 } MPR121_settings_type;
 
 typedef struct {
-	uint8_t address;
+	uint8_t _address;
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0))
+	i2c_master_bus_handle_t _i2c_bus_handle;
+	i2c_master_dev_handle_t _i2c_dev_handle;
+#endif
+
 	MPR121_settings_type defaultSettings;
-	uint8_t ECR_backup; // so we can re-enable the correct number of electrodes
-									// when recovering from stop mode
+	uint8_t ECR_backup; // so we can re-enable the correct number of electrodes when recovering from stop mode
 	uint8_t error;
 	bool running;
 	uint8_t interruptPin;
@@ -118,9 +142,8 @@ typedef struct {
 	int16_t filteredData[13];
 	int16_t baselineData[13];
 	uint16_t touchData;
-	uint16_t lastTouchData;
-	bool autoTouchStatusFlag; // we use this to catch touch / release events that happen
-																				// during other update calls
+	uint16_t lastTouchData; // we use this to catch touch / release events that happen during other update calls
+	bool autoTouchStatusFlag;
 } MPR121_t;
 
 
@@ -225,6 +248,10 @@ enum mpr121_SFI_type
 
 
 // -------------------- BASIC FUNCTIONS --------------------
+
+void i2c_setRegister(MPR121_t * dev, uint8_t reg, uint8_t value);
+uint8_t i2c_getRegister(MPR121_t * dev, uint8_t reg);
+void i2c_register(MPR121_t * dev, int16_t sda, int16_t scl);
 
 void MPR121_type(MPR121_t * dev);
 
@@ -427,7 +454,6 @@ void MPR121_setFFI(MPR121_t * dev, uint8_t FFI);
 void MPR121_setSFI(MPR121_t * dev, uint8_t SFI);
 
 //extern MPR121_type MPR121;
-
 
 #endif // MPR121_H
 

@@ -48,25 +48,11 @@
 
 #include "mpr121.h"
 
-#define NOT_INITED_BIT 0
-#define ADDRESS_UNKNOWN_BIT 1
-#define READBACK_FAIL_BIT 2
-#define OVERCURRENT_FLAG_BIT 3
-#define OUT_OF_RANGE_BIT 4
-
-#if CONFIG_I2C_PORT_0
-#define I2C_NUM I2C_NUM_0
-#else
-#define I2C_NUM I2C_NUM_1
-#endif
-
-#define I2C_MASTER_FREQ_HZ 400000 /*!< I2C master clock frequency. no higher than 1MHz for now */
-
 static const char *TAG = "MPR121";
 
 void MPR121_type(MPR121_t * dev){
 	//dev->address = 0x5C;	// default address is 0x5C, for use with Bare Conductive Touch Board
-	dev->address = 0x5A;	// default address is 0x5A, for use with Bare Conductive Touch Board
+	dev->_address = 0x5A;	// default address is 0x5A, for use with Bare Conductive Touch Board
 	dev->ECR_backup = 0x00;
 	dev->running = false;
 	dev->error = 1<<NOT_INITED_BIT; // initially, we're not initialised
@@ -93,53 +79,18 @@ void MPR121_setRegister(MPR121_t * dev, uint8_t reg, uint8_t value){
 		// unless modding MPR121_ECR or GPIO / LED register
 	}
 
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-	i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, (dev->address << 1) | I2C_MASTER_WRITE, true);
-	i2c_master_write_byte(cmd, reg, true);
-	i2c_master_write_byte(cmd, value, true);
-	i2c_master_stop(cmd);
-	esp_err_t espRc = i2c_master_cmd_begin(I2C_NUM, cmd, 10/portTICK_PERIOD_MS);
-	if (espRc == ESP_OK) {
-		ESP_LOGD(TAG, "setRegister reg=0x%02x value=0x%02x successfully", reg, value);
-		dev->error &= ~(1<<ADDRESS_UNKNOWN_BIT);
-	} else {
-		ESP_LOGE(TAG, "setRegister reg=0x%02x value=0x%02x failed. code: 0x%02x", reg, value, espRc);
-		dev->error |= 1<<ADDRESS_UNKNOWN_BIT; // set address unknown bit
-	}
-	i2c_cmd_link_delete(cmd);
+	// i2c write register
+	ESP_LOGD(TAG, "setRegister reg=0x%02x", reg);
+	i2c_setRegister(dev, reg, value);
 
 	if(wasRunning) MPR121_run(dev); // restore run mode if necessary
 }
 
 uint8_t MPR121_getRegister(MPR121_t * dev, uint8_t reg){
+
+	// i2c read register
 	ESP_LOGD(TAG, "getRegister reg=0x%02x", reg);
-	uint8_t scratch = 0;
-
-	uint8_t buf[2];
-	memset (buf, 0, 2);
-
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-	i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, (dev->address << 1) | I2C_MASTER_WRITE, true);
-	i2c_master_write_byte(cmd, reg, true);
-
-	i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, (dev->address << 1) | I2C_MASTER_READ, true);
-	i2c_master_read(cmd, buf, 1, I2C_MASTER_NACK);
-
-	i2c_master_stop(cmd);
-	esp_err_t espRc = i2c_master_cmd_begin(I2C_NUM, cmd, 10/portTICK_PERIOD_MS);
-	if (espRc == ESP_OK) {
-		dev->error &= ~(1<<ADDRESS_UNKNOWN_BIT);
-		scratch = buf[0];
-		ESP_LOGD(TAG, "getRegister reg=0x%02x successfully scratch=0x%02x", reg, scratch);
-	} else {
-		ESP_LOGE(TAG, "getRegister reg=0x%02x failed. code: 0x%02x", reg, espRc);
-		dev->error |= 1<<ADDRESS_UNKNOWN_BIT; // set address unknown bit
-	}
-	i2c_cmd_link_delete(cmd);
-
+	uint8_t scratch = i2c_getRegister(dev, reg);
 
 	// auto update errors for registers with error data
 	if(reg == MPR121_TS2 && ((scratch&0x80)!=0)){
@@ -157,24 +108,13 @@ uint8_t MPR121_getRegister(MPR121_t * dev, uint8_t reg){
 
 bool MPR121_begin(MPR121_t * dev, int16_t address, int16_t touchThreshold, int16_t releaseThreshold, int16_t interruptPin, int16_t sda, int16_t scl){
 
-	// SDA and SCL should idle high, but MPR121 can get stuck waiting to complete a transaction
-	// this code detects this state and releases us from it
-	i2c_config_t i2c_config = {
-		.mode = I2C_MODE_MASTER,
-		.sda_io_num = sda,
-		.scl_io_num = scl,
-		.sda_pullup_en = GPIO_PULLUP_ENABLE,
-		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.master.clk_speed = I2C_MASTER_FREQ_HZ
-	};
-	ESP_ERROR_CHECK(i2c_param_config(I2C_NUM, &i2c_config));
-	ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM, I2C_MODE_MASTER, 0, 0, 0));
-
-	// addresses only valid 0x5A to 0x5D - if we don't change the address it stays at default
 	if(address>=0x5A && address<=0x5D)
 	{
-		dev->address = address; // need to be specific here
+		dev->_address = address;
 	}
+
+	// i2c driver register
+	i2c_register(dev, sda, scl);
 
 	dev->error &= ~(1<<NOT_INITED_BIT); // clear NOT_INITED error flag
 
@@ -284,11 +224,15 @@ bool MPR121_reset(MPR121_t * dev){
 		dev->error &= ~(1<<READBACK_FAIL_BIT);
 	}
 
+	vTaskDelay(10);
+	ESP_LOGD(__FUNCTION__, "start getRegister MPR121_TS2");
 	if((MPR121_getRegister(dev, MPR121_TS2)&0x80)!=0){
 		dev->error |= 1<<OVERCURRENT_FLAG_BIT;
 	} else {
 		dev->error &= ~(1<<OVERCURRENT_FLAG_BIT);
 	}
+	vTaskDelay(10);
+	ESP_LOGD(__FUNCTION__, "done getRegister MPR121_TS2");
 
 	if(MPR121_getError(dev)==NOT_INITED || MPR121_getError(dev)==NO_ERROR){ // if our only error is that we are not inited...
 		return true;
