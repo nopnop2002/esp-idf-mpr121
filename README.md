@@ -47,7 +47,7 @@ If you use the MPR121 at the same time as other I2C devices that use legacy I2C 
 Enabling this will use the legacy i2c driver even after ESP-IDF V5.2.   
 ![Image](https://github.com/user-attachments/assets/d40cdd42-3a03-4ea8-a0ea-ebdfe2cdb8e2)
 
-# Wirering
+# Wiring
 
 |MPR121||ESP32|ESP32-S2/S3|ESP32-C2/C3/C6|
 |:-:|:-:|:-:|:-:|:-:|
